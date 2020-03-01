@@ -93,15 +93,19 @@ class DEC(nn.Module):
 		x = self.autoencoder.encode(x) 
 		return self.clusteringlayer(x)
 
-	def visualize(self, epoch,x):
+	def visualize(self, epoch, X, Y):
 		fig = plt.figure()
 		ax = plt.subplot(111)
-		x = self.autoencoder.encode(x).detach() 
-		x = x.cpu().numpy()[:2000]
-		x_embedded = TSNE(n_components=2).fit_transform(x)
-		plt.scatter(x_embedded[:,0], x_embedded[:,1])
+		X = self.autoencoder.encode(X).detach() 
+		X = X.cpu().numpy()[:2000]
+		X_embedded = TSNE(n_components=2).fit_transform(X)
+		plt.scatter(X_embedded[:,0], X_embedded[:,1])
 		fig.savefig('plots/mnist_{}.png'.format(epoch))
 		plt.close(fig)
+		with open('saves/tsne-{}.txt'.format(epoch), 'w') as f:
+			f.write('x0 x1 y\n')
+			for x, y in zip(X_embedded, Y):
+				f.write('{} {} {}\n'.format(x[0], x[1], y))
 
 def add_noise(img):
 	noise = torch.randn(img.size()) * 0.2
@@ -201,7 +205,7 @@ def train(**kwargs):
 		out = output.argmax(1)
 		if epoch % 20 == 0:
 			print('plotting')
-			dec.visualize(epoch, img)
+			dec.visualize(epoch, img, labels)
 		loss = loss_function(output.log(), target) / output.shape[0]
 		optimizer.zero_grad()
 		loss.backward()
