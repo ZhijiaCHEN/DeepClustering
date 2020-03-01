@@ -93,19 +93,19 @@ class DEC(nn.Module):
         x = self.autoencoder.encode(x) 
         return self.clusteringlayer(x)
 
-	def visualize(self, epoch, X, Y):
-		fig = plt.figure()
-		ax = plt.subplot(111)
-		X = self.autoencoder.encode(X).detach() 
-		X = X.cpu().numpy()[:2000]
-		X_embedded = TSNE(n_components=2).fit_transform(X)
-		plt.scatter(X_embedded[:,0], X_embedded[:,1])
-		fig.savefig('plots/mnist_{}.png'.format(epoch))
-		plt.close(fig)
-		with open('saves/tsne-{}.txt'.format(epoch), 'w') as f:
-			f.write('x0 x1 y\n')
-			for x, y in zip(X_embedded, Y):
-				f.write('{} {} {}\n'.format(x[0], x[1], y))
+    def visualize(self, epoch, X, Y):
+        fig = plt.figure()
+        ax = plt.subplot(111)
+        X = self.autoencoder.encode(X).detach() 
+        X = X.cpu().numpy()[:2000]
+        X_embedded = TSNE(n_components=2).fit_transform(X)
+        plt.scatter(X_embedded[:,0], X_embedded[:,1])
+        fig.savefig('plots/mnist_{}.png'.format(epoch))
+        plt.close(fig)
+        with open('saves/tsne-{}.txt'.format(epoch), 'w') as f:
+            f.write('x0 x1 y\n')
+            for x, y in zip(X_embedded, Y):
+                f.write('{} {} {}\n'.format(x[0], x[1], y))
 
 def add_noise(img):
     noise = torch.randn(img.size()) * 0.2
@@ -192,32 +192,32 @@ def train(**kwargs):
     accuracy = acc(y.cpu().numpy(), y_pred)
     print('Initial Accuracy: {}'.format(accuracy))
 
-	loss_function = nn.KLDivLoss(size_average=False)
-	optimizer = torch.optim.SGD(params=model.parameters(), lr=0.1, momentum=0.9)
-	print('Training')
-	row = []
-	for epoch in range(start_epoch, num_epochs):
-		batch = data
-		img = batch.float()
-		img = img.to(device)
-		output = model(img)
-		target = model.target_distribution(output).detach()
-		out = output.argmax(1)
-		if epoch % 20 == 0:
-			print('plotting')
-			dec.visualize(epoch, img, labels)
-		loss = loss_function(output.log(), target) / output.shape[0]
-		optimizer.zero_grad()
-		loss.backward()
-		optimizer.step()
-		accuracy = acc(y.cpu().numpy(), out.cpu().numpy())
-		row.append([epoch, accuracy])
-		print('Epochs: [{}/{}] Accuracy:{}, Loss:{}'.format(epoch, num_epochs, accuracy, loss))
-		state = loss.item()
-		is_best = False
-		if state < checkpoint['best']:
-		    checkpoint['best'] = state
-		    is_best = True
+    loss_function = nn.KLDivLoss(size_average=False)
+    optimizer = torch.optim.SGD(params=model.parameters(), lr=0.1, momentum=0.9)
+    print('Training')
+    row = []
+    for epoch in range(start_epoch, num_epochs):
+        batch = data
+        img = batch.float()
+        img = img.to(device)
+        output = model(img)
+        target = model.target_distribution(output).detach()
+        out = output.argmax(1)
+        if epoch % 20 == 0:
+            print('plotting')
+            dec.visualize(epoch, img, labels)
+        loss = loss_function(output.log(), target) / output.shape[0]
+        optimizer.zero_grad()
+        loss.backward()
+        optimizer.step()
+        accuracy = acc(y.cpu().numpy(), out.cpu().numpy())
+        row.append([epoch, accuracy])
+        print('Epochs: [{}/{}] Accuracy:{}, Loss:{}'.format(epoch, num_epochs, accuracy, loss))
+        state = loss.item()
+        is_best = False
+        if state < checkpoint['best']:
+            checkpoint['best'] = state
+            is_best = True
 
         save_checkpoint({
                         'state_dict': model.state_dict(),
@@ -295,7 +295,3 @@ if __name__ == '__main__':
             "best": float("inf")
         }
     train(data=x, labels=y, model=dec, num_epochs=args.train_epochs, savepath=dec_save_path, checkpoint=checkpoint)
-    
-
-    
-        
